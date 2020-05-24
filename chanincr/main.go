@@ -1,9 +1,20 @@
+/*
+ * Compare the following benchmarks:
+ *
+ *   $ ab -n 20000 -c 200 "127.0.0.1:8070/inc?name=i"
+ *   $ ab -k -n 20000 -c 200 "127.0.0.1:8070/inc?name=i"
+ *   $ ab -k -n 20000 -c 16000 "127.0.0.1:8070/inc?name=i"
+ *
+ * For an explanation see: https://stackoverflow.com/a/30357879
+ */
 package main
 
 import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime"
+	"time"
 )
 
 type CommandType int
@@ -77,8 +88,26 @@ func limitNumClients(fn http.HandlerFunc, maxClients int) http.HandlerFunc {
 	}
 }
 
+func startTickLog(cmds chan<- Command) {
+	go func() {
+		tick := time.Tick(time.Second)
+		for range tick {
+			replyChan := make(chan int, 1)
+			cmds <- Command{ty: GetCommand, name: "i", replyChan: replyChan}
+
+			reply := <-replyChan
+			log.Printf("Requests: %d, Goroutines: %d\n", reply, runtime.NumGoroutine())
+		}
+	}()
+}
+
 func main() {
+	log.Println("NumCPU", runtime.NumCPU())
+	log.Println("NumGoroutine", runtime.NumGoroutine())
+	log.Println("GOMAXPROCS", runtime.GOMAXPROCS(1))
+
 	cmds := startCounterManager()
+	startTickLog(cmds)
 	store := Server{cmds: cmds}
 
 	http.HandleFunc("/inc", store.inc)
