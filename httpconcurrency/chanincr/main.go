@@ -1,12 +1,3 @@
-/*
- * Compare the following benchmarks:
- *
- *   $ ab -n 20000 -c 200 "127.0.0.1:8070/inc?name=i"
- *   $ ab -k -n 20000 -c 200 "127.0.0.1:8070/inc?name=i"
- *   $ ab -k -n 20000 -c 16000 "127.0.0.1:8070/inc?name=i"
- *
- * For an explanation see: https://stackoverflow.com/a/30357879
- */
 package main
 
 import (
