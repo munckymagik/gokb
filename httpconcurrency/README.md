@@ -3,9 +3,10 @@ Based on the tutorial at: https://eli.thegreenplace.net/2019/on-concurrency-in-g
 The following benchmarks were interesting:
 
 ```shell
-$ ab -n 20000 -c 200 "127.0.0.1:8070/inc?name=i"
-$ ab -k -n 20000 -c 200 "127.0.0.1:8070/inc?name=i"
-$ ab -k -n 20000 -c 16000 "127.0.0.1:8070/inc?name=i"
+ab -n 20000 -c 200 "127.0.0.1:8070/inc?name=i"
+ab -k -n 20000 -c 200 "127.0.0.1:8070/inc?name=i"
+ab -k -n 20000 -c 16000 "127.0.0.1:8070/inc?name=i"
+ab -k -t30 -n 2000000 -c 200 "127.0.0.1:8070/inc?name=i"
 ```
 
 The first example crapped out at around 16383. The -k keepalive option resolved this. The problem
