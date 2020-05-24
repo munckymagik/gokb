@@ -95,7 +95,7 @@ func startTickLog(cmds chan<- Command) {
 func main() {
 	log.Println("NumCPU", runtime.NumCPU())
 	log.Println("NumGoroutine", runtime.NumGoroutine())
-	log.Println("GOMAXPROCS", runtime.GOMAXPROCS(1))
+	log.Println("GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	cmds := startCounterManager()
 	startTickLog(cmds)
