@@ -39,6 +39,8 @@ func createRepo(name string) mapsync.Repo {
 		repo = mapsync.NewMutexRepo()
 	case "rwmutex":
 		repo = mapsync.NewRWMutexRepo()
+	case "chan":
+		repo = mapsync.NewChanRepo()
 	default:
 		usage()
 	}
