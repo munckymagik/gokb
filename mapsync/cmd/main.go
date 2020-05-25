@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/munckymagik/gokb/mapsync"
 )
@@ -22,8 +23,29 @@ func (handlerState *HandlerState) get(w http.ResponseWriter, req *http.Request) 
 	}
 }
 
+func usage() {
+	log.Fatalln("USAGE go run ./cmd [naive|atomic]")
+}
+
+func createRepo(name string) mapsync.Repo {
+	var repo mapsync.Repo
+
+	switch name {
+	case "naive":
+		repo = mapsync.NewNaiveRepo()
+	default:
+		usage()
+	}
+
+	return repo
+}
+
 func main() {
-	store := HandlerState{repo: mapsync.NewNaiveRepo()}
+	if len(os.Args) != 2 {
+		usage()
+	}
+
+	store := HandlerState{repo: createRepo(os.Args[1])}
 	http.HandleFunc("/get", store.get)
 
 	port := 8070
