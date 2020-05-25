@@ -20,14 +20,14 @@ func NewAtomicRepo() Repo {
 }
 
 func (repo *atomicrepo) updateDB(value int) {
-	db := make(map[string]*Record)
+	db := make(RecordMap)
 	db["x"] = &Record{value}
 	repo.db.Store(db)
 }
 
 func (repo *atomicrepo) Get(key string) *Record {
 	maybeDb := repo.db.Load()
-	db := maybeDb.(map[string]*Record)
+	db := maybeDb.(RecordMap)
 
 	return db[key]
 }

@@ -6,11 +6,11 @@ import (
 )
 
 type naiverepo struct {
-	db map[string]*Record
+	db RecordMap
 }
 
 func NewNaiveRepo() Repo {
-	repo := naiverepo{make(map[string]*Record)}
+	repo := naiverepo{make(RecordMap)}
 	repo.db["x"] = &Record{1}
 	go repo.updateLoop()
 	return &repo
@@ -25,7 +25,7 @@ func (repo *naiverepo) updateLoop() {
 
 	for range tick {
 		newValue := repo.db["x"].value + 1
-		repo.db = make(map[string]*Record)
+		repo.db = make(RecordMap)
 		repo.db["x"] = &Record{newValue}
 		log.Println("Updated to:", newValue)
 	}

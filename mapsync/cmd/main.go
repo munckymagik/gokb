@@ -14,7 +14,7 @@ type HandlerState struct {
 }
 
 func (handlerState *HandlerState) get(w http.ResponseWriter, req *http.Request) {
-	log.Printf("get %v", req)
+	// log.Printf("get %v", req)
 	name := req.URL.Query().Get("name")
 	if val := handlerState.repo.Get(name); val != nil {
 		fmt.Fprintf(w, "%s: %d\n", name, val)
@@ -24,7 +24,7 @@ func (handlerState *HandlerState) get(w http.ResponseWriter, req *http.Request) 
 }
 
 func usage() {
-	log.Fatalln("USAGE go run ./cmd [naive|atomic]")
+	log.Fatalln("USAGE go run ./cmd [naive|atomic|mutex]")
 }
 
 func createRepo(name string) mapsync.Repo {
@@ -35,6 +35,8 @@ func createRepo(name string) mapsync.Repo {
 		repo = mapsync.NewNaiveRepo()
 	case "atomic":
 		repo = mapsync.NewAtomicRepo()
+	case "mutex":
+		repo = mapsync.NewMutexRepo()
 	default:
 		usage()
 	}

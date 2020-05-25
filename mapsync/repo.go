@@ -7,3 +7,5 @@ type Record struct {
 type Repo interface {
 	Get(key string) *Record
 }
+
+type RecordMap map[string]*Record
