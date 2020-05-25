@@ -33,6 +33,8 @@ func createRepo(name string) mapsync.Repo {
 	switch name {
 	case "naive":
 		repo = mapsync.NewNaiveRepo()
+	case "atomic":
+		repo = mapsync.NewAtomicRepo()
 	default:
 		usage()
 	}
