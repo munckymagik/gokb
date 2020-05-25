@@ -1,4 +1,4 @@
-package advconc
+package main
 
 import (
 	"time"
