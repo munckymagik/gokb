@@ -1,5 +1,12 @@
 Based on the tutorial at: https://eli.thegreenplace.net/2019/on-concurrency-in-go-http-servers/
 
+Run as:
+
+```
+cd httpconcurrency
+go run -race ./[badincr|mutexincr|chanincr]
+```
+
 The following benchmarks were interesting:
 
 ```shell
