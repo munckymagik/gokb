@@ -44,12 +44,12 @@ type SourceProcessor func() Message
 type SinkProcessor func(OutMessage)
 type Processor func(Message) OutMessage
 
+// Concrete stream processing types
+
 type OrderSourceProcessor struct {
 	offset   int
 	messages []OrderMessage
 }
-
-// Concrete stream processing types
 
 func NewOrderSourceProcessor(messages []OrderMessage) OrderSourceProcessor {
 	return OrderSourceProcessor{-1, messages}
