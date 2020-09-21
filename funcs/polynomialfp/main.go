@@ -1,4 +1,4 @@
-// Demonstrates a more functional approach to modelling a Polynomial.
+// Demonstrates using functions as first class data to model a Polynomial.
 //
 // Run as cd funcs && go run ./polynomialfp
 package main
@@ -40,6 +40,7 @@ func Constant(constant float64) Function {
 }
 
 func main() {
+	// Models 1.5x^2 + 2x - 0.5
 	actualP := Polynomial(
 		Term(1.5, 2),
 		Linear(2),
