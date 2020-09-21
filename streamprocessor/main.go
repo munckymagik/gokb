@@ -5,29 +5,30 @@ import "fmt"
 // ----------------------------------------------------------------------------
 // Imagine the following is a generic stream processing package
 
-// Thing to note 01: using an interface as a marker. This allows us to
-// group unlike variants without having to wrap them in `interface{}`. Kind of
-// like variant types.
+// Note: using an interface as a marker where the set of types are structurally
+// unlike but form a distinct set. Kind of like variant types.
+
 type SourceMessage interface {
+	// See https://golang.org/doc/faq#guarantee_satisfies_interface
 	ImplementsSourceMessage()
 }
 type SinkMessage interface {
 	ImplementsSinkMessage()
 }
 
-// Thing to note 02: using function signatures as an "interface of one". We
-// can pass either free functions or methods bound to stateful objects.
-type SourceProcessor func() SourceMessage
-type SinkProcessor func(SinkMessage)
-type Processor func(SourceMessage) (SinkMessage, error)
-
 type EndOfStream struct{}
 
 func (EndOfStream) ImplementsSourceMessage() {}
 
-// Thing to note 03: making the client code the owner of the interfaces rather
-// than the concrete types. Leads to many smaller interfaces, and simple
-// mocks in tests.
+// Note: using function signatures as "interfaces of one". We
+// can pass either free functions or methods bound to stateful objects.
+
+type SourceProcessor func() SourceMessage
+type SinkProcessor func(SinkMessage)
+type Processor func(SourceMessage) (SinkMessage, error)
+
+// Note: the types defined above are the duck-types for this
+// function.
 func ProcessStream(next SourceProcessor, process Processor, sink SinkProcessor) {
 	for {
 		message := next()
@@ -53,22 +54,18 @@ func ProcessStream(next SourceProcessor, process Processor, sink SinkProcessor) 
 type ID = int64
 type Currency = int64
 
-// OrderMessage is our input message type
 type OrderMessage struct {
 	OrderID   ID
 	ItemCosts []Currency
 }
 
-// A no-op that tags OrderMessage as a SourceMessage
 func (OrderMessage) ImplementsSourceMessage() {}
 
-// LedgerMessage is our output message type
 type LedgerMessage struct {
 	OrderID ID
 	Total   Currency
 }
 
-// A no-op that tags LedgerMessage as a SinkMessage
 func (LedgerMessage) ImplementsSinkMessage() {}
 
 func (lm LedgerMessage) String() string {
@@ -80,17 +77,19 @@ func (lm LedgerMessage) String() string {
 	)
 }
 
-// OrderSourceProcessor knows how to stream OrderMessages
 type OrderSourceProcessor struct {
 	offset   int
 	messages []OrderMessage
 }
 
-func NewOrderSourceProcessor(messages []OrderMessage) OrderSourceProcessor {
-	return OrderSourceProcessor{-1, messages}
+func NewOrderSourceProcessor(messages []OrderMessage) SourceProcessor {
+	p := OrderSourceProcessor{-1, messages}
+
+	// Note: returns a bound method value
+	return p.Next
 }
 
-// Next satisfies the SourceProcessor signature
+// Note: Next satisfies the SourceProcessor signature
 func (o *OrderSourceProcessor) Next() SourceMessage {
 	o.offset++
 	if o.offset >= len(o.messages) {
@@ -100,17 +99,15 @@ func (o *OrderSourceProcessor) Next() SourceMessage {
 	return o.messages[o.offset]
 }
 
-// NewStdoutSinkProcessor knows how to sink all message types to STDOUT.
-// It returns a function that satisfies the SinkProcessor signature.
 func NewStdoutSinkProcessor() SinkProcessor {
+	// Note: high order functions
 	return func(message SinkMessage) {
 		fmt.Printf("Sinking %v\n", message)
 	}
 }
 
-// NewOrderToLedgerStreamProcessor creates a Processor that knows how to
-// produce LedgerMessage sink messages from OrderMessage source messages.
 func NewOrderToLedgerStreamProcessor() Processor {
+	// Note: high order functions
 	return func(message SourceMessage) (SinkMessage, error) {
 		switch value := message.(type) {
 		case OrderMessage:
@@ -141,11 +138,11 @@ func main() {
 	processor := NewOrderToLedgerStreamProcessor()
 	sink := NewStdoutSinkProcessor()
 
-	// Thing to note 04: you can pass either functions or bound method values
+	// Note: you can pass either functions or bound method values
 	// for function typed arguments
 	ProcessStream(
-		source.Next, // passing a bound method value
-		processor,   // passing a function
-		sink,        // ditto
+		source,    // this is a bound method value
+		processor, // this is an anonymous function
+		sink,
 	)
 }
