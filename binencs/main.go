@@ -24,6 +24,13 @@ func main() {
 	report("Base32", dataBase32, dataSize)
 	report("Hex", dataHex, dataSize)
 
+	decoded, err := decodeASCII85(dataSize, string(dataAscii85))
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	fmt.Printf("Decoded from ascii85: %s\n", string(decoded))
 }
 
 func report(name string, encoded string, before int) {
@@ -38,4 +45,28 @@ func report(name string, encoded string, before int) {
 
 func ratio(before, after int) float64 {
 	return float64(after) / float64(before)
+}
+
+func decodeASCII85(decodedSize int, ascii85Encoded string) ([]byte, error) {
+	// ascii85.Decode needs the destination buffer size to be the next
+	// smallest multiple of 4 greater than the expected decoded size
+	destBuffer := make([]byte, nextMultipleOf4(decodedSize))
+	ndst, nsrc, err := ascii85.Decode(destBuffer, []byte(ascii85Encoded), true)
+
+	if err != nil {
+		return nil, err
+	}
+	if nsrc != len(ascii85Encoded) {
+		return nil, fmt.Errorf("did not consume entire length of encoded message")
+	}
+	if ndst != decodedSize {
+		return nil, fmt.Errorf("message did not decode to the expected size")
+	}
+
+	return destBuffer[0:ndst], nil
+}
+
+// nextMultipleOf4 rounds up value to the next smallest multiple of 4
+func nextMultipleOf4(value int) int {
+	return ((value + 3) / 4) * 4
 }
