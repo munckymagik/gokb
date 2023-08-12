@@ -2,9 +2,12 @@ package bplustree_test
 
 import (
 	"testing"
+	"testing/quick"
 
 	"github.com/munckymagik/gokb/bplustree"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 )
 
 func TestBPlusTreeInsert(t *testing.T) {
@@ -21,27 +24,66 @@ func TestBPlusTreeInsert(t *testing.T) {
 		require.Equal(t, bt1.Find(123), ptr("some value"))
 		require.Equal(t, bt2.Find("some key"), ptr(123))
 	})
+
+	t.Run("it maintains the invariant as new keys are added", func(t *testing.T) {
+		propFunc := func(keys []int) bool {
+			// Given
+			bt := bplustree.New[int, emptyValue]()
+
+			// When
+			for _, key := range keys {
+				bt.Insert(key, emptyValue{})
+			}
+
+			// Then
+			return assert.NoError(t, bt.CheckInvariantsHold())
+		}
+
+		require.NoError(t, quick.Check(propFunc, &quick.Config{MaxCount: 1000}))
+	})
 }
 
 func TestBPlusTreeEach(t *testing.T) {
-	t.Run("it performs in-order traversal of entries based on keys", func(t *testing.T) {
+	t.Run("it does not crash or execute when the tree is empty", func(t *testing.T) {
 		// Given
-		type emptyValue = struct{}
 		bt := bplustree.New[int, emptyValue]()
-		bt.Insert(2, emptyValue{})
-		bt.Insert(1, emptyValue{})
-		bt.Insert(3, emptyValue{})
+		executions := 0
 
 		// When
-		var collected []int
 		bt.Each(func(key int, _ emptyValue) {
-			collected = append(collected, key)
+			executions += 1
 		})
 
 		// Then
-		require.Equal(t, []int{1, 2, 3}, collected)
+		require.Zero(t, executions)
+	})
+
+	t.Run("it performs in-order traversal of entries based on keys", func(t *testing.T) {
+		propFunc := func(keys []int) bool {
+			// Given
+			bt := bplustree.New[int, emptyValue]()
+			sortedKeys := slices.Clone(keys)
+			slices.Sort(sortedKeys)
+
+			for _, key := range keys {
+				bt.Insert(key, emptyValue{})
+			}
+
+			// When
+			collected := make([]int, 0)
+			bt.Each(func(key int, _ emptyValue) {
+				collected = append(collected, key)
+			})
+
+			// Then
+			return assert.Equal(t, sortedKeys, collected)
+		}
+
+		require.NoError(t, quick.Check(propFunc, &quick.Config{MaxCount: 1000}))
 	})
 }
+
+type emptyValue = struct{}
 
 func ptr[T any](v T) *T {
 	return &v
