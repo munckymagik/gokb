@@ -43,6 +43,32 @@ func TestBPlusTreeInsert(t *testing.T) {
 	})
 }
 
+func TestBPlusTreeFind(t *testing.T) {
+	t.Run("when the key exists it returns a pointer to the value", func(t *testing.T) {
+		// Given
+		bt := bplustree.New[int, int]()
+		bt.Insert(123, 456)
+
+		// When
+		found := bt.Find(123)
+
+		// Then
+		require.Equal(t, ptr(456), found)
+	})
+
+	t.Run("when the key does not exist it returns nil", func(t *testing.T) {
+		// Given
+		bt := bplustree.New[int, int]()
+		bt.Insert(456, 789)
+
+		// When
+		found := bt.Find(123)
+
+		// Then
+		require.Nil(t, found)
+	})
+}
+
 func TestBPlusTreeEach(t *testing.T) {
 	t.Run("it does not crash or execute when the tree is empty", func(t *testing.T) {
 		// Given
