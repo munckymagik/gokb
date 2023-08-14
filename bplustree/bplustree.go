@@ -24,10 +24,15 @@ func New[K constraints.Ordered, V any]() Tree[K, V] {
 }
 
 func (t *Tree[K, V]) Insert(key K, value V) {
-	_, page := t.root.doFind(key, nil)
+	entry, page := t.root.doFind(key, nil)
 	if page == nil {
 		t.root = newPage[K, V](nil)
 		page = t.root
+	}
+
+	if entry != nil {
+		entry.value = value
+		return
 	}
 
 	page.add(key, value)

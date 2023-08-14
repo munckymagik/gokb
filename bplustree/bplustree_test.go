@@ -7,6 +7,7 @@ import (
 	"github.com/munckymagik/gokb/bplustree"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
 )
 
@@ -23,6 +24,19 @@ func TestBPlusTreeInsert(t *testing.T) {
 		// Then
 		require.Equal(t, bt1.Find(123), ptr("some value"))
 		require.Equal(t, bt2.Find("some key"), ptr(123))
+	})
+
+	t.Run("when the key already exists it updates the value", func(t *testing.T) {
+		// Given
+		bt := bplustree.New[int, int]()
+		bt.Insert(123, 456)
+
+		// When
+		bt.Insert(123, 789)
+
+		// Then
+		found := bt.Find(123)
+		require.Equal(t, 789, *found)
 	})
 
 	t.Run("it maintains the invariant as new keys are added", func(t *testing.T) {
@@ -85,24 +99,23 @@ func TestBPlusTreeEach(t *testing.T) {
 	})
 
 	t.Run("it performs in-order traversal of entries based on keys", func(t *testing.T) {
-		propFunc := func(keys []int) bool {
+		propFunc := func(keys []int8) bool {
 			// Given
-			bt := bplustree.New[int, emptyValue]()
-			sortedKeys := slices.Clone(keys)
-			slices.Sort(sortedKeys)
+			bt := bplustree.New[int8, emptyValue]()
+			sortedSetKeys := cloneSortAndCompact(keys)
 
 			for _, key := range keys {
 				bt.Insert(key, emptyValue{})
 			}
 
 			// When
-			collected := make([]int, 0)
-			bt.Each(func(key int, _ emptyValue) {
+			collected := make([]int8, 0)
+			bt.Each(func(key int8, _ emptyValue) {
 				collected = append(collected, key)
 			})
 
 			// Then
-			return assert.Equal(t, sortedKeys, collected)
+			return assert.Equal(t, sortedSetKeys, collected)
 		}
 
 		require.NoError(t, quick.Check(propFunc, &quick.Config{MaxCount: 1000}))
@@ -113,4 +126,10 @@ type emptyValue = struct{}
 
 func ptr[T any](v T) *T {
 	return &v
+}
+
+func cloneSortAndCompact[S ~[]E, E constraints.Ordered](s S) S {
+	sortedKeys := slices.Clone(s)
+	slices.Sort(sortedKeys)
+	return slices.Compact(sortedKeys)
 }
