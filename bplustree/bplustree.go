@@ -22,7 +22,7 @@ func New[K constraints.Ordered, V any]() Tree[K, V] {
 }
 
 func (t *Tree[K, V]) Insert(key K, value V) {
-	entry, page := t.root.doFind(key, nil)
+	entry, page := t.root.find(key, nil)
 	if page == nil {
 		t.root = newPage[K, V](nil)
 		page = t.root
@@ -70,7 +70,7 @@ func (t *Tree[K, V]) split(p *page[K, V]) {
 }
 
 func (t *Tree[K, V]) Find(key K) *V {
-	found, _ := t.root.doFind(key, nil)
+	found, _ := t.root.find(key, nil)
 	if found == nil {
 		return nil
 	}
@@ -139,7 +139,7 @@ func (page *page[K, V]) traverseSubtree(f func(K, V)) {
 	}
 }
 
-func (p *page[K, V]) doFind(key K, parent *page[K, V]) (*entry[K, V], *page[K, V]) {
+func (p *page[K, V]) find(key K, parent *page[K, V]) (*entry[K, V], *page[K, V]) {
 	if p == nil {
 		return nil, parent
 	}
@@ -149,7 +149,7 @@ func (p *page[K, V]) doFind(key K, parent *page[K, V]) (*entry[K, V], *page[K, V
 		if key < p.entries[i].key {
 			// recurse into the left child
 			if len(p.children) > i {
-				return p.children[i].doFind(key, p)
+				return p.children[i].find(key, p)
 			}
 			return nil, p
 		}
@@ -164,7 +164,7 @@ func (p *page[K, V]) doFind(key K, parent *page[K, V]) (*entry[K, V], *page[K, V
 
 	// Final option is to check the remaining child
 	if i < len(p.children) {
-		return p.children[i].doFind(key, p)
+		return p.children[i].find(key, p)
 	}
 
 	return nil, p
