@@ -69,13 +69,14 @@ func (t *Tree[K, V]) split(p *page[K, V]) {
 	}
 }
 
-func (t *Tree[K, V]) Find(key K) *V {
-	found, _ := t.root.find(key, nil)
-	if found == nil {
-		return nil
+func (t *Tree[K, V]) Find(key K) (V, bool) {
+	entry, _ := t.root.find(key, nil)
+	if entry == nil {
+		var zeroValue V
+		return zeroValue, false
 	}
 
-	return &found.value
+	return entry.value, true
 }
 
 func (t *Tree[K, V]) Each(f func(K, V)) {

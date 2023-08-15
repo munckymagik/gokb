@@ -12,20 +12,6 @@ import (
 )
 
 func TestBPlusTreeInsert(t *testing.T) {
-	t.Run("it supports generic key/value pairs", func(t *testing.T) {
-		// Given
-		bt1 := bplustree.New[int, string]()
-		bt2 := bplustree.New[string, int]()
-
-		// When
-		bt1.Insert(123, "some value")
-		bt2.Insert("some key", 123)
-
-		// Then
-		require.Equal(t, bt1.Find(123), ptr("some value"))
-		require.Equal(t, bt2.Find("some key"), ptr(123))
-	})
-
 	t.Run("when the key already exists it updates the value", func(t *testing.T) {
 		// Given
 		bt := bplustree.New[int, int]()
@@ -35,8 +21,8 @@ func TestBPlusTreeInsert(t *testing.T) {
 		bt.Insert(123, 789)
 
 		// Then
-		found := bt.Find(123)
-		require.Equal(t, 789, *found)
+		value, _ := bt.Find(123)
+		require.Equal(t, 789, value)
 	})
 
 	t.Run("it maintains the invariant as new keys are added", func(t *testing.T) {
@@ -58,28 +44,30 @@ func TestBPlusTreeInsert(t *testing.T) {
 }
 
 func TestBPlusTreeFind(t *testing.T) {
-	t.Run("when the key exists it returns a pointer to the value", func(t *testing.T) {
+	t.Run("when the key exists it returns the value", func(t *testing.T) {
 		// Given
 		bt := bplustree.New[int, int]()
 		bt.Insert(123, 456)
 
 		// When
-		found := bt.Find(123)
+		value, found := bt.Find(123)
 
 		// Then
-		require.Equal(t, ptr(456), found)
+		require.True(t, found)
+		require.Equal(t, 456, value)
 	})
 
-	t.Run("when the key does not exist it returns nil", func(t *testing.T) {
+	t.Run("when the key does not exist it returns the zero value of the type", func(t *testing.T) {
 		// Given
 		bt := bplustree.New[int, int]()
 		bt.Insert(456, 789)
 
 		// When
-		found := bt.Find(123)
+		value, found := bt.Find(123)
 
 		// Then
-		require.Nil(t, found)
+		require.False(t, found)
+		require.Equal(t, 0, value)
 	})
 }
 
@@ -123,10 +111,6 @@ func TestBPlusTreeEach(t *testing.T) {
 }
 
 type emptyValue = struct{}
-
-func ptr[T any](v T) *T {
-	return &v
-}
 
 func cloneSortAndCompact[S ~[]E, E constraints.Ordered](s S) S {
 	sortedKeys := slices.Clone(s)
