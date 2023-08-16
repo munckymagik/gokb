@@ -14,13 +14,17 @@ const (
 )
 
 type Tree[K constraints.Ordered, V any] struct {
-	root *page[K, V]
+	root       *page[K, V]
+	numEntries int
 }
 
 func New[K constraints.Ordered, V any]() Tree[K, V] {
 	return Tree[K, V]{}
 }
 
+func (t *Tree[K, V]) Len() int {
+	return t.numEntries
+}
 func (t *Tree[K, V]) Insert(key K, value V) {
 	entry, page := t.root.find(key, nil)
 	if page == nil {
@@ -34,6 +38,7 @@ func (t *Tree[K, V]) Insert(key K, value V) {
 	}
 
 	page.add(key, value)
+	t.numEntries += 1
 
 	if len(page.entries) > maxEntries {
 		t.split(page)

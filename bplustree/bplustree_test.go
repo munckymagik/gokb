@@ -109,6 +109,23 @@ func TestBPlusTreeEach(t *testing.T) {
 		require.NoError(t, quick.Check(propFunc, &quick.Config{MaxCount: 1000}))
 	})
 }
+func TestBPlusTreeLen(t *testing.T) {
+	t.Run("it returns the number of unique entries in the tree", func(t *testing.T) {
+		propFunc := func(keys []int8) bool {
+			// Given
+			bt := bplustree.New[int8, emptyValue]()
+			sortedSetKeys := cloneSortAndCompact(keys)
+			for _, key := range keys {
+				bt.Insert(key, emptyValue{})
+			}
+
+			// Then
+			return assert.Equal(t, len(sortedSetKeys), bt.Len())
+		}
+
+		require.NoError(t, quick.Check(propFunc, &quick.Config{MaxCount: 1000}))
+	})
+}
 
 type emptyValue = struct{}
 
