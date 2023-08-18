@@ -1,4 +1,4 @@
-package bplustree
+package btree
 
 import (
 	"golang.org/x/exp/constraints"

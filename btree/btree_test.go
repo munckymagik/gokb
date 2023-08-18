@@ -1,20 +1,20 @@
-package bplustree_test
+package btree_test
 
 import (
 	"testing"
 	"testing/quick"
 
-	"github.com/munckymagik/gokb/bplustree"
+	"github.com/munckymagik/gokb/btree"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
 )
 
-func TestBPlusTreeInsert(t *testing.T) {
+func TestBTreeInsert(t *testing.T) {
 	t.Run("when the key already exists it updates the value", func(t *testing.T) {
 		// Given
-		bt := bplustree.New[int, int]()
+		bt := btree.New[int, int]()
 		bt.Insert(123, 456)
 
 		// When
@@ -28,7 +28,7 @@ func TestBPlusTreeInsert(t *testing.T) {
 	t.Run("it maintains the invariant as new keys are added", func(t *testing.T) {
 		propFunc := func(keys []int) bool {
 			// Given
-			bt := bplustree.New[int, emptyValue]()
+			bt := btree.New[int, emptyValue]()
 
 			// When
 			for _, key := range keys {
@@ -43,10 +43,10 @@ func TestBPlusTreeInsert(t *testing.T) {
 	})
 }
 
-func TestBPlusTreeFind(t *testing.T) {
+func TestBTreeFind(t *testing.T) {
 	t.Run("when the key exists it returns the value", func(t *testing.T) {
 		// Given
-		bt := bplustree.New[int, int]()
+		bt := btree.New[int, int]()
 		bt.Insert(123, 456)
 
 		// When
@@ -59,7 +59,7 @@ func TestBPlusTreeFind(t *testing.T) {
 
 	t.Run("when the key does not exist it returns the zero value of the type", func(t *testing.T) {
 		// Given
-		bt := bplustree.New[int, int]()
+		bt := btree.New[int, int]()
 		bt.Insert(456, 789)
 
 		// When
@@ -71,10 +71,10 @@ func TestBPlusTreeFind(t *testing.T) {
 	})
 }
 
-func TestBPlusTreeEach(t *testing.T) {
+func TestBTreeEach(t *testing.T) {
 	t.Run("it does not crash or execute when the tree is empty", func(t *testing.T) {
 		// Given
-		bt := bplustree.New[int, emptyValue]()
+		bt := btree.New[int, emptyValue]()
 		executions := 0
 
 		// When
@@ -89,7 +89,7 @@ func TestBPlusTreeEach(t *testing.T) {
 	t.Run("it performs in-order traversal of entries based on keys", func(t *testing.T) {
 		propFunc := func(keys []int8) bool {
 			// Given
-			bt := bplustree.New[int8, emptyValue]()
+			bt := btree.New[int8, emptyValue]()
 			sortedSetKeys := cloneSortAndCompact(keys)
 
 			for _, key := range keys {
@@ -109,11 +109,11 @@ func TestBPlusTreeEach(t *testing.T) {
 		require.NoError(t, quick.Check(propFunc, &quick.Config{MaxCount: 1000}))
 	})
 }
-func TestBPlusTreeLen(t *testing.T) {
+func TestBTreeLen(t *testing.T) {
 	t.Run("it returns the number of unique entries in the tree", func(t *testing.T) {
 		propFunc := func(keys []int8) bool {
 			// Given
-			bt := bplustree.New[int8, emptyValue]()
+			bt := btree.New[int8, emptyValue]()
 			sortedSetKeys := cloneSortAndCompact(keys)
 			for _, key := range keys {
 				bt.Insert(key, emptyValue{})
