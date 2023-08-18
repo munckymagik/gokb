@@ -78,8 +78,8 @@ func (p *page[K, V]) validate(level int, state *invariantState) {
 	}
 
 	for i, entry := range p.entries {
-		assert(fmt.Sprintf("NOT child[%d].lastEntry.key < entries[%d].key", i, i), p.children[i].lastEntry().key < entry.key)
-		assert(fmt.Sprintf("NOT entries[%d].key < child[%d].firstEntry.key", i, i+1), entry.key < p.children[i+1].firstEntry().key)
+		assert(fmt.Sprintf("NOT child[%d].lastEntry.key < entries[%d].key", i, i), p.children[i].entries.last().key < entry.key)
+		assert(fmt.Sprintf("NOT entries[%d].key < child[%d].firstEntry.key", i, i+1), entry.key < p.children[i+1].entries.first().key)
 	}
 }
 

@@ -46,27 +46,21 @@ func (t *Tree[K, V]) Insert(key K, value V) {
 }
 
 func (t *Tree[K, V]) split(p *page[K, V]) {
-	if p.parent == nil {
-		p.parent = newPage[K, V](nil)
-		p.parent.children = append(p.parent.children, p)
-		t.root = p.parent
+	if p.isRoot() {
+		newRoot := newPage[K, V](nil)
+		newRoot.setChildren(p)
+		t.root = newRoot
 	}
 
 	newRight := newPage[K, V](p.parent)
-	newRight.entries = append(newRight.entries, p.entries[minEntries+1:]...)
-	newRight.entries = slices.Clone(p.entries[minEntries+1:])
-	p.entries = p.entries[:minEntries+1]
+	newRight.entries = p.entries.splitAt(minEntries + 1)
+
 	if len(p.children) > 0 {
-		newRight.children = slices.Clone(p.children[minChildren+1:])
-		p.children = p.children[:minChildren+1]
-		for _, child := range newRight.children {
-			child.parent = newRight
-		}
+		newRight.setChildren(p.children.splitAt(minChildren + 1)...)
 	}
 
-	p.parent.entries = append(p.parent.entries, p.entries[minEntries])
-	p.entries = p.entries[:minEntries]
-	p.parent.children = append(p.parent.children, newRight)
+	p.parent.entries.add(p.entries.pop())
+	p.parent.children.add(newRight)
 	p.parent.sort()
 
 	if len(p.parent.entries) > maxEntries {
@@ -90,6 +84,41 @@ func (t *Tree[K, V]) Each(f func(K, V)) {
 	}
 }
 
+type items[E any] []E
+
+func (self items[E]) first() *E {
+	if len(self) == 0 {
+		return nil
+	}
+	return &self[0]
+}
+func (self items[E]) last() *E {
+	if len(self) == 0 {
+		return nil
+	}
+	return &self[len(self)-1]
+}
+
+func (self *items[E]) add(elem E) {
+	*self = append(*self, elem)
+}
+
+func (self *items[E]) pop() E {
+	elem := *self.last()
+	*self = (*self)[:len(*self)-1]
+	return elem
+}
+
+func (self items[E]) sort(less func(a E, b E) bool) {
+	slices.SortFunc(self, less)
+}
+
+func (src *items[E]) splitAt(fromIndex int) items[E] {
+	ret := slices.Clone((*src)[fromIndex:])
+	*src = (*src)[:fromIndex:fromIndex]
+	return ret
+}
+
 type entry[K any, V any] struct {
 	key   K
 	value V
@@ -97,37 +126,36 @@ type entry[K any, V any] struct {
 
 type page[K constraints.Ordered, V any] struct {
 	parent   *page[K, V]
-	entries  []entry[K, V]
-	children []*page[K, V]
+	entries  items[entry[K, V]]
+	children items[*page[K, V]]
 }
 
 func newPage[K constraints.Ordered, V any](parent *page[K, V]) *page[K, V] {
 	return &page[K, V]{parent: parent}
 }
 
+func (p *page[K, V]) isRoot() bool {
+	return p.parent == nil
+}
+
 func (p *page[K, V]) add(key K, value V) {
 	newEntry := entry[K, V]{key: key, value: value}
-	p.entries = append(p.entries, newEntry)
+	p.entries.add(newEntry)
 	p.sort()
 }
 
-func (p *page[K, V]) firstEntry() *entry[K, V] {
-	if len(p.entries) == 0 {
-		return nil
+func (p *page[K, V]) setChildren(incoming ...*page[K, V]) {
+	p.children = incoming
+	for _, child := range p.children {
+		child.parent = p
 	}
-	return &p.entries[0]
-}
-func (p *page[K, V]) lastEntry() *entry[K, V] {
-	if len(p.entries) == 0 {
-		return nil
-	}
-	return &p.entries[len(p.entries)-1]
 }
 
 func (p *page[K, V]) sort() {
-	slices.SortFunc(p.entries, func(e1, e2 entry[K, V]) bool { return e1.key < e2.key })
-	slices.SortFunc(p.children, func(c1, c2 *page[K, V]) bool {
-		return c1.lastEntry().key < c2.firstEntry().key
+	p.entries.sort(func(e1, e2 entry[K, V]) bool { return e1.key < e2.key })
+
+	p.children.sort(func(c1, c2 *page[K, V]) bool {
+		return c1.entries.last().key < c2.entries.first().key
 	})
 }
 
