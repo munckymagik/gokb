@@ -6,8 +6,13 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+type invariantState struct {
+	leafLevel int
+}
+
 func (t *Tree[K, V]) AssertInvariantsHold() {
-	t.root.validateSubtree()
+	var state invariantState
+	t.root.validateSubtree(1, &state)
 }
 
 func (t *Tree[K, V]) CheckInvariantsHold() (err error) {
@@ -21,19 +26,19 @@ func (t *Tree[K, V]) CheckInvariantsHold() (err error) {
 	return nil
 }
 
-func (p *page[K, V]) validateSubtree() {
+func (p *page[K, V]) validateSubtree(level int, state *invariantState) {
 	if p == nil {
 		return
 	}
 
 	for _, child := range p.children {
-		child.validateSubtree()
+		child.validateSubtree(level+1, state)
 	}
 
-	p.validate()
+	p.validate(level, state)
 }
 
-func (p *page[K, V]) validate() {
+func (p *page[K, V]) validate(level int, state *invariantState) {
 	isLeaf := len(p.children) == 0
 	isRoot := p.parent == nil
 
@@ -63,6 +68,12 @@ func (p *page[K, V]) validate() {
 	}
 
 	if isLeaf {
+		if state.leafLevel == 0 {
+			state.leafLevel = level
+		} else {
+			assert(fmt.Sprintf("Leaf at wrong level. Got %d, expected %d", level, state.leafLevel), level == state.leafLevel)
+		}
+
 		return
 	}
 
