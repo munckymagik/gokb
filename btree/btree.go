@@ -159,17 +159,17 @@ func (p *page[K, V]) sort() {
 	})
 }
 
-func (page *page[K, V]) traverseSubtree(f func(K, V)) {
+func (p *page[K, V]) traverseSubtree(f func(K, V)) {
 	i := 0
-	for ; i < len(page.entries); i += 1 {
-		if len(page.children) > i {
-			page.children[i].traverseSubtree(f)
+	for ; i < len(p.entries); i += 1 {
+		if len(p.children) > i {
+			p.children[i].traverseSubtree(f)
 		}
-		f(page.entries[i].key, page.entries[i].value)
+		f(p.entries[i].key, p.entries[i].value)
 	}
 
-	if len(page.children) > i {
-		page.children[len(page.entries)].traverseSubtree(f)
+	if len(p.children) > i {
+		p.children[len(p.entries)].traverseSubtree(f)
 	}
 }
 
