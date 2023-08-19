@@ -179,24 +179,16 @@ func (p *page[K, V]) find(key K, parent *page[K, V]) (*entry[K, V], *page[K, V])
 	}
 
 	i := 0
-	for ; i < len(p.entries); i = i + 1 {
-		if key < p.entries[i].key {
-			// recurse into the left child
-			if len(p.children) > i {
-				return p.children[i].find(key, p)
-			}
-			return nil, p
-		}
-
+	for ; i < len(p.entries); i += 1 {
 		if key == p.entries[i].key {
-			// We've found it, return
 			return &p.entries[i], p
 		}
 
-		// Continue search to next entry
+		if key < p.entries[i].key {
+			break
+		}
 	}
 
-	// Final option is to check the remaining child
 	if i < len(p.children) {
 		return p.children[i].find(key, p)
 	}
