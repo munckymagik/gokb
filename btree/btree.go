@@ -114,7 +114,7 @@ func (self items[E]) sort(less func(a E, b E) bool) {
 }
 
 func (src *items[E]) splitAt(fromIndex int) items[E] {
-	ret := slices.Clone((*src)[fromIndex:])
+	ret := (*src)[fromIndex:]
 	*src = (*src)[:fromIndex:fromIndex]
 	return ret
 }
