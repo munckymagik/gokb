@@ -44,9 +44,11 @@ func (p *page[K, V]) validate(level int, state *invariantState) {
 
 	// 1. Every page has at most 2k+1 children.
 	assert("too many children", len(p.children) <= maxChildren)
+	assert("children cap too large", cap(p.children) <= maxChildren+1)
 
 	// 1.1 Every page has at most 2k entries.
 	assert("too many entries", len(p.entries) <= maxEntries)
+	assert("entries cap too large", cap(p.entries) <= maxEntries+1)
 
 	// 2. Every non-leaf page (except root) has at least ⌈(2k+1)/2⌉ child pages.
 	if !isLeaf && !isRoot {
