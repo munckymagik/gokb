@@ -73,9 +73,13 @@ func (t *Tree[K, V]) split(p *page[K, V]) {
 }
 
 func (t *Tree[K, V]) Find(key K) (V, bool) {
+	var zeroValue V
+	if t.root == nil {
+		return zeroValue, false
+	}
+
 	entry, _ := t.root.find(key)
 	if entry == nil {
-		var zeroValue V
 		return zeroValue, false
 	}
 

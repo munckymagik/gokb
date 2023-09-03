@@ -1,6 +1,7 @@
 package btree_test
 
 import (
+	"math/rand"
 	"testing"
 	"testing/quick"
 
@@ -64,7 +65,6 @@ func TestBTreeFind(t *testing.T) {
 	t.Run("when the key does not exist it returns the zero value of the type", func(t *testing.T) {
 		// Given
 		bt := btree.New[int, int]()
-		bt.Insert(456, 789)
 
 		// When
 		value, found := bt.Find(123)
@@ -72,6 +72,43 @@ func TestBTreeFind(t *testing.T) {
 		// Then
 		require.False(t, found)
 		require.Equal(t, 0, value)
+	})
+
+	t.Run("behaves consistently over all possible trees", func(t *testing.T) {
+		propFunc := func(keys []int) bool {
+			// Given
+			if len(keys) == 0 {
+				return true
+			}
+
+			sortedSetKeys := cloneSortAndCompact(keys)
+			present := shuffled(sortedSetKeys[:len(sortedSetKeys)/2])
+			absent := sortedSetKeys[len(sortedSetKeys)/2:]
+			bt := newBTreeFrom(present)
+
+			for _, searchKey := range present {
+				// When
+				value, found := bt.Find(searchKey)
+
+				// Then
+				if !(assert.True(t, found) && assert.Equal(t, searchKey, value)) {
+					return false
+				}
+			}
+			for _, searchKey := range absent {
+				// When
+				value, found := bt.Find(searchKey)
+
+				// Then
+				if !(assert.False(t, found) && assert.Equal(t, 0, value)) {
+					return false
+				}
+			}
+
+			return true
+		}
+
+		require.NoError(t, quick.Check(propFunc, &quick.Config{MaxCount: 1000}))
 	})
 }
 
@@ -137,4 +174,21 @@ func cloneSortAndCompact[S ~[]E, E constraints.Ordered](s S) S {
 	sortedKeys := slices.Clone(s)
 	slices.Sort(sortedKeys)
 	return slices.Compact(sortedKeys)
+}
+
+func newBTreeFrom[K constraints.Ordered](keys []K) btree.Tree[K, K] {
+	bt := btree.New[K, K]()
+	for _, key := range keys {
+		bt.Insert(key, key)
+	}
+	return bt
+}
+
+func shuffled[T any](elems []T) []T {
+	elems = slices.Clone(elems)
+	rand.Shuffle(len(elems), func(i, j int) {
+		elems[i] = elems[j]
+	})
+
+	return elems
 }
