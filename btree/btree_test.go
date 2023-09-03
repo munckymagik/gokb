@@ -30,13 +30,17 @@ func TestBTreeInsert(t *testing.T) {
 			// Given
 			bt := btree.New[int, emptyValue]()
 
-			// When
 			for _, key := range keys {
+				// When
 				bt.Insert(key, emptyValue{})
+
+				// Then
+				if !assert.NotPanics(t, bt.AssertInvariantsHold, "key=%d", key) {
+					return false
+				}
 			}
 
-			// Then
-			return assert.NoError(t, bt.CheckInvariantsHold())
+			return true
 		}
 
 		require.NoError(t, quick.Check(propFunc, &quick.Config{MaxCount: 1000}))
