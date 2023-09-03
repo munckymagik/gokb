@@ -24,23 +24,28 @@ func New[K constraints.Ordered, V any]() Tree[K, V] {
 func (t *Tree[K, V]) Len() int {
 	return t.numEntries
 }
+
 func (t *Tree[K, V]) Insert(key K, value V) {
-	entry, page := t.root.find(key, nil)
-	if page == nil {
+	var leaf *page[K, V]
+
+	if t.root == nil {
 		t.root = newPage[K, V](nil)
-		page = t.root
+		leaf = t.root
+	} else {
+		var entry *entry[K, V]
+		entry, leaf = t.root.find(key)
+
+		if entry != nil {
+			entry.value = value
+			return
+		}
 	}
 
-	if entry != nil {
-		entry.value = value
-		return
-	}
-
-	page.add(key, value)
+	leaf.add(key, value)
 	t.numEntries += 1
 
-	if len(page.entries) > maxEntries {
-		t.split(page)
+	if len(leaf.entries) > maxEntries {
+		t.split(leaf)
 	}
 }
 
@@ -68,7 +73,7 @@ func (t *Tree[K, V]) split(p *page[K, V]) {
 }
 
 func (t *Tree[K, V]) Find(key K) (V, bool) {
-	entry, _ := t.root.find(key, nil)
+	entry, _ := t.root.find(key)
 	if entry == nil {
 		var zeroValue V
 		return zeroValue, false

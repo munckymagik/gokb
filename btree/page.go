@@ -56,11 +56,7 @@ func (p *page[K, V]) traverseSubtree(f func(K, V)) {
 	}
 }
 
-func (p *page[K, V]) find(key K, parent *page[K, V]) (*entry[K, V], *page[K, V]) {
-	if p == nil {
-		return nil, parent
-	}
-
+func (p *page[K, V]) find(key K) (*entry[K, V], *page[K, V]) {
 	i := 0
 	for ; i < len(p.entries); i += 1 {
 		if key == p.entries[i].key {
@@ -73,7 +69,7 @@ func (p *page[K, V]) find(key K, parent *page[K, V]) (*entry[K, V], *page[K, V])
 	}
 
 	if i < len(p.children) {
-		return p.children[i].find(key, p)
+		return p.children[i].find(key)
 	}
 
 	return nil, p
