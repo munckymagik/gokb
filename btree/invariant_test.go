@@ -15,17 +15,6 @@ func (t *Tree[K, V]) AssertInvariantsHold() {
 	t.root.validateSubtree(1, &state)
 }
 
-func (t *Tree[K, V]) CheckInvariantsHold() (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("%v", r)
-		}
-	}()
-
-	t.AssertInvariantsHold()
-	return nil
-}
-
 func (p *page[K, V]) validateSubtree(level int, state *invariantState) {
 	if p == nil {
 		return
